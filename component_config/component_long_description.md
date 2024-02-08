@@ -1,0 +1,1 @@
+Zoom Webinars Extractor retrieves the registrants of your Zoom webinars.

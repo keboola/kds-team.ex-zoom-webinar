@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "title": "extractor configuration",
+  "required": [
+    "webinar_id"
+  ],
+  "properties": {
+    "webinar_id": {
+      "type": "array",
+      "title": "Webinar IDs",
+      "items": {
+                "title": "Webinar ID",
+                "type": "string"
+            },
+      "propertyOrder": 1
+    }
+  }
+}
