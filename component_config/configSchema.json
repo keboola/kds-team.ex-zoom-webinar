@@ -7,13 +7,9 @@
   "properties": {
     "webinar_id": {
         "title": "Webinar IDs",
-        "type": "array",
+        "type": "string",
         "propertyOrder": 1,
         "description": "Webinar IDs for which the data will be obtained.",
-        "items": {
-          "enum": [],
-          "type": "string"
-        },
         "format": "select",
         "options": {
           "async": {

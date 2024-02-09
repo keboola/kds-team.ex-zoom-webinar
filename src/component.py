@@ -58,34 +58,37 @@ class Component(ComponentBase):
         for endpoint in endpoints:
             self.extract_data(webinar_ids, endpoint)
 
-    def extract_data(self, webinar_ids: list, endpoint: str) -> None:
+    def extract_data(self, webinar_id: str, endpoint: str) -> None:
         """
         Extracts data from Zoom API and writes it to the output table.
 
         Args:
-            webinar_ids: list of webinar ids
+            webinar_id: id of the webinar to extract data from
             endpoint: endpoint to extract data from
 
         """
 
-        out_table = self.create_out_table_definition(f'{endpoint.replace("/","-")}.csv')
-        with ElasticDictWriter(out_table.full_path, out_table.columns) as writer:
+        extracted_records = 0
+        try:
+            response = self.client.raw.get_all_pages("/webinars/" + webinar_id + "/" + endpoint)
 
-            for web_id in webinar_ids:
+            results = response.get(endpoint, [])
 
-                extracted_records = 0
-                try:
-                    response = self.client.raw.get_all_pages("/webinars/" + web_id + "/" + endpoint)
+            if results:
+                out_table = self.create_out_table_definition(f'{endpoint.replace("/", "-")}.csv')
 
-                    for registrant in response.get('registrants', []):
-                        writer.writerow(registrant)
+                with ElasticDictWriter(out_table.full_path, out_table.columns) as writer:
+
+                    for row in results:
+                        writer.writerow(row)
                         extracted_records += 1
 
-                except Exception as e:
-                    logging.error(f"[ERROR] When obtaining {endpoint} of webinar: {web_id} failed with error: {e} ")
+                self.write_manifest(out_table)
 
-            logging.info(f"[INFO] Extracted {extracted_records} {endpoint} from webinar: {web_id}")
-        self.write_manifest(out_table)
+        except Exception as e:
+            logging.error(f"[ERROR] When obtaining {endpoint} of webinar: {webinar_id} failed with error: {e} ")
+
+        logging.info(f"[INFO] Extracted {extracted_records} {endpoint} from webinar: {webinar_id}")
 
     @sync_action('get_webinars')
     def get_webinars(self):
