@@ -6,13 +6,66 @@
   ],
   "properties": {
     "webinar_id": {
-      "type": "array",
-      "title": "Webinar IDs",
-      "items": {
-                "title": "Webinar ID",
-                "type": "string"
-            },
-      "propertyOrder": 1
+        "title": "Webinar IDs",
+        "type": "array",
+        "propertyOrder": 1,
+        "description": "Webinar IDs for which the data will be obtained.",
+        "items": {
+          "enum": [],
+          "type": "string"
+        },
+        "format": "select",
+        "options": {
+          "async": {
+            "label": "Load webinars",
+            "action": "get_webinars"
+          }
+        },
+        "uniqueItems": true
+      },
+    "endpoints": {
+      "type": "object",
+      "title": "Endpoints",
+      "format": "grid-strict",
+      "propertyOrder": 10,
+      "properties": {
+        "registrants": {
+          "title": "Registrants",
+          "format": "checkbox",
+          "type": "boolean",
+          "default": true,
+          "options": {
+            "grid_columns": 3
+          }
+        },
+        "polls": {
+          "title": "Polls",
+          "format": "checkbox",
+          "type": "boolean",
+          "default": false,
+          "options": {
+            "grid_columns": 3
+          }
+        },
+        "registrants/questions": {
+          "title": "Registrants/questions",
+          "format": "checkbox",
+          "type": "boolean",
+          "default": false,
+          "options": {
+            "grid_columns": 3
+          }
+        },
+        "survey": {
+          "title": "Survey",
+          "format": "checkbox",
+          "type": "boolean",
+          "default": false,
+          "options": {
+            "grid_columns": 3
+          }
+        }
+      }
     }
   }
 }
