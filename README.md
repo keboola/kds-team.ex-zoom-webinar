@@ -13,39 +13,29 @@ Functionality notes
 Prerequisites
 =============
 
-Get the API token, register application, etc.
+Authorize access to your Zoom account under the Authorization tab.
 
-Features
-========
-
-| **Feature**             | **Note**                                      |
-|-------------------------|-----------------------------------------------|
-| Generic UI form         | Dynamic UI form                               |
-| Row Based configuration | Allows structuring the configuration in rows. |
-| oAuth                   | oAuth authentication enabled                  |
-| Incremental loading     | Allows fetching data in new increments.       |
-| Backfill mode           | Support for seamless backfill setup.          |
-| Date range filter       | Specify date range.                           |
 
 Supported endpoints
 ===================
 
+Currently, the component supports the following endpoints:
+- Webinar registrants - [documentation](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/webinarRegistrants)
+- Registration questions - [documentation](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/webinarRegistrantsQuestionsGet)
+- Polls - [documentation](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/webinarPolls)
+- Survey - [documentation](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/webinarSurveyGet)
+
 If you need more endpoints, please submit your request to
-[ideas.keboola.com](https://ideas.keboola.com/)
 
 Configuration
 =============
 
-Param 1
--------
-
-Param 2
--------
+Select a webinar and endpoints from which you want to retrieve data.
 
 Output
 ======
 
-List of tables, foreign keys, schema.
+The component creates one output table for each selected endpoint.
 
 Development
 -----------

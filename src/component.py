@@ -1,33 +1,29 @@
-'''
+"""
 Template Component main class.
 
-'''
+"""
 
 import logging
 
-from keboola.component import ComponentBase
+from keboola.component.base import ComponentBase, sync_action
 from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
+from keboola.component.sync_actions import SelectElement
+
 
 from pyzoom import ZoomClient, refresh_tokens
 
 # configuration variables
 STATE_REFRESH_TOKEN = "#refresh_token"
 KEY_WEBINAR_ID = 'webinar_id'
+KEY_ENDPOINTS = 'endpoints'
 
-
-# #### Keep for debug
-KEY_STDLOG = 'stdlogging'
-KEY_DEBUG = 'debug'
-MANDATORY_PARS = []
-MANDATORY_IMAGE_PARS = []
-
-APP_VERSION = '0.1.0'
+APP_VERSION = '0.2.0'
 
 
 class Component(ComponentBase):
 
-    def __init__(self, debug=False):
+    def __init__(self):
         super().__init__()
 
         if not self.configuration.oauth_credentials:
@@ -47,34 +43,67 @@ class Component(ComponentBase):
         self.client = ZoomClient(refreshed_tokens.get("access_token"), refreshed_tokens.get("refresh_token"))
 
     def run(self):
-        '''
+        """
         Main execution code
-        '''
+        """
 
-        webinar_ids = self.configuration.parameters.get(KEY_WEBINAR_ID, None)
-        if not webinar_ids:
+        logging.info(f"[INFO] Running Zoom Webinar Extractor v{APP_VERSION}")
+
+        webinar_id = self.configuration.parameters.get(KEY_WEBINAR_ID, None)
+        if not webinar_id:
             raise UserException(f"[ERROR] Webinar IDs is not provided.")
 
-        out_table = self.create_out_table_definition('registrants.csv')
+        endpoints = self.configuration.parameters.get(KEY_ENDPOINTS, None)
 
-        with ElasticDictWriter(out_table.full_path, out_table.columns) as writer:
+        for endpoint in endpoints:
+            self.extract_data(webinar_id, endpoint)
 
-            for web_id in webinar_ids:
+    def extract_data(self, webinar_id: str, endpoint: str) -> None:
+        """
+        Extracts data from Zoom API and writes it to the output table.
 
-                extracted_registrants = 0
-                try:
-                    registered_res = self.client.raw.get_all_pages("/webinars/" + web_id + "/registrants")
+        Args:
+            webinar_id: id of the webinar to extract data from
+            endpoint: endpoint to extract data from
 
-                    for registrant in registered_res.get('registrants', []):
-                        writer.writerow(registrant)
-                        extracted_registrants += 1
+        """
 
-                except Exception as e:
-                    logging.error(f"[ERROR] When obtaining details of webinar: {web_id} failed with error: {e} ")
+        extracted_records = 0
+        try:
+            response = self.client.raw.get_all_pages("/webinars/" + webinar_id + "/" + endpoint)
 
-            logging.info(f"[INFO] Extracted {extracted_registrants} registrants from webinar: {web_id}")
+            results = response.get(endpoint, [])
 
-        self.write_manifest(out_table)
+            if results:
+                out_table = self.create_out_table_definition(f'{endpoint.replace("/", "-")}.csv')
+
+                with ElasticDictWriter(out_table.full_path, out_table.columns) as writer:
+
+                    for row in results:
+                        writer.writerow(row)
+                        extracted_records += 1
+
+                out_table = self.create_out_table_definition(f'{endpoint.replace("/", "-")}.csv',
+                                                             columns=writer.fieldnames)
+
+                self.write_manifest(out_table)
+
+        except Exception as e:
+            logging.error(f"[ERROR] When obtaining {endpoint} of webinar: {webinar_id} failed with error: {e} ")
+
+        logging.info(f"[INFO] Extracted {extracted_records} {endpoint} from webinar: {webinar_id}")
+
+    @sync_action('get_webinars')
+    def get_webinars(self):
+
+        try:
+            result = self.client.raw.get_all_pages("/users/me/webinars")
+            webinars = result.get('webinars', [])
+
+        except Exception as client_exc:
+            raise UserException(client_exc) from client_exc
+
+        return [SelectElement(value=(str(wbn["id"])), label=f'{wbn["topic"]} ({str(wbn["id"])})') for wbn in webinars]
 
 
 """
